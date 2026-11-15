@@ -15,6 +15,15 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -28,7 +37,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { USERS, STATUS_OPTIONS, STATUS_BADGE_COLORS } from "@/lib/constants";
-import { Plus, AlertTriangle } from "lucide-react";
+import { Plus, CircleAlert } from "lucide-react";
 import type { BookingLog } from "@/db/schema";
 import { cn } from "@/lib/utils";
 import { format, differenceInCalendarDays } from "date-fns";
@@ -129,6 +138,8 @@ export function BookingForm({
     startTransition(async () => {
       const result = await createBooking(formData);
       if (!result.success) {
+        // 關閉新增表單，彈出衝突警告視窗
+        setNewDialogOpen(false);
         setConflictError(result.error ?? "預約失敗");
         return;
       }
@@ -259,14 +270,6 @@ export function BookingForm({
               />
             </div>
 
-            {/* Conflict Error */}
-            {conflictError && (
-              <div className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/50 dark:text-red-400">
-                <AlertTriangle className="mt-0.5 size-4 shrink-0" />
-                <span>{conflictError}</span>
-              </div>
-            )}
-
             <DialogFooter>
               <DialogClose render={<Button variant="outline" />}>
                 取消
@@ -390,6 +393,29 @@ export function BookingForm({
           )}
         </DialogContent>
       </Dialog>
+
+      {/* ==================== Conflict Alert Dialog ==================== */}
+      <AlertDialog
+        open={!!conflictError}
+        onOpenChange={(open) => {
+          if (!open) setConflictError(null);
+        }}
+      >
+        <AlertDialogContent className="sm:max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-red-600">
+              <CircleAlert className="size-5" />
+              預約衝突
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base text-foreground">
+              {conflictError}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction>知道了</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
