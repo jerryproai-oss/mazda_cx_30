@@ -78,11 +78,13 @@ export function NavBar() {
 
         {/* Mobile Hamburger */}
         <Sheet open={open} onOpenChange={setOpen}>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="md:hidden rounded-xl">
+          <SheetTrigger
+            render={
+              <Button variant="ghost" size="icon" className="md:hidden rounded-xl" />
+            }
+          >
               <Menu className="size-5" />
               <span className="sr-only">開啟選單</span>
-            </Button>
           </SheetTrigger>
 
           <SheetContent side="right" className="w-72">
