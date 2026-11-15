@@ -28,7 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { USERS, STATUS_OPTIONS, STATUS_BADGE_COLORS } from "@/lib/constants";
-import { Plus } from "lucide-react";
+import { Plus, AlertTriangle } from "lucide-react";
 import type { BookingLog } from "@/db/schema";
 import { cn } from "@/lib/utils";
 import { format, differenceInCalendarDays } from "date-fns";
@@ -83,6 +83,7 @@ export function BookingForm({
   const [endDate, setEndDate] = useState("");
   const [userName, setUserName] = useState<string>(USERS[0]);
   const [purpose, setPurpose] = useState("");
+  const [conflictError, setConflictError] = useState<string | null>(null);
 
   // Calculate preview applyDays
   const applyDaysPreview = useMemo(() => {
@@ -99,6 +100,7 @@ export function BookingForm({
       setEndDate(formatted);
       setUserName(USERS[0]);
       setPurpose("");
+      setConflictError(null);
       setNewDialogOpen(true);
     }
   }, [selectedDate, selectedBooking]);
@@ -123,8 +125,13 @@ export function BookingForm({
   }
 
   function handleCreateSubmit(formData: FormData) {
+    setConflictError(null);
     startTransition(async () => {
-      await createBooking(formData);
+      const result = await createBooking(formData);
+      if (!result.success) {
+        setConflictError(result.error ?? "預約失敗");
+        return;
+      }
       handleNewDialogClose();
       router.refresh();
     });
@@ -165,6 +172,7 @@ export function BookingForm({
           setEndDate(today);
           setUserName(USERS[0]);
           setPurpose("");
+          setConflictError(null);
           setNewDialogOpen(true);
         }}
       >
@@ -250,6 +258,14 @@ export function BookingForm({
                 rows={3}
               />
             </div>
+
+            {/* Conflict Error */}
+            {conflictError && (
+              <div className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/50 dark:text-red-400">
+                <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+                <span>{conflictError}</span>
+              </div>
+            )}
 
             <DialogFooter>
               <DialogClose render={<Button variant="outline" />}>

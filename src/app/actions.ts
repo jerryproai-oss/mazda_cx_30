@@ -2,7 +2,7 @@
 
 import { db } from "@/db";
 import { bookingLogs, costRecords } from "@/db/schema";
-import { eq, and, or, gte, lte, sql } from "drizzle-orm";
+import { eq, and, or, gte, lte, ne, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { calculateCostSharing } from "@/lib/cost-calculator";
 import type { CostInput } from "@/lib/cost-calculator";
@@ -43,11 +43,43 @@ export async function getBookingsByMonth(year: number, month: number) {
   return results;
 }
 
-export async function createBooking(formData: FormData) {
+export async function createBooking(formData: FormData): Promise<{
+  success: boolean;
+  error?: string;
+}> {
   const startDate = formData.get("startDate") as string;
   const endDate = formData.get("endDate") as string;
   const userName = formData.get("userName") as string;
   const purpose = formData.get("purpose") as string;
+
+  // ── 衝突檢測 ──
+  // 日期重疊邏輯：existing.startDate <= newEndDate AND existing.endDate >= newStartDate
+  // 排除已取消的預約
+  const conflicts = await db
+    .select({
+      id: bookingLogs.id,
+      userName: bookingLogs.userName,
+      startDate: bookingLogs.startDate,
+      endDate: bookingLogs.endDate,
+    })
+    .from(bookingLogs)
+    .where(
+      and(
+        ne(bookingLogs.status, "已取消"),
+        lte(bookingLogs.startDate, endDate),
+        gte(bookingLogs.endDate, startDate)
+      )
+    );
+
+  if (conflicts.length > 0) {
+    const conflictDetails = conflicts
+      .map((c) => `${c.userName}（${c.startDate} ~ ${c.endDate}）`)
+      .join("、");
+    return {
+      success: false,
+      error: `日期衝突！該時段已被預約：${conflictDetails}`,
+    };
+  }
 
   // Calculate applyDays = difference in days + 1 (inclusive)
   const start = new Date(startDate);
@@ -66,6 +98,7 @@ export async function createBooking(formData: FormData) {
   });
 
   revalidatePath("/");
+  return { success: true };
 }
 
 export async function updateBookingStatus(id: number, newStatus: string) {
