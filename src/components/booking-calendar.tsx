@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import {
   format,
   startOfMonth,
@@ -37,6 +37,40 @@ export function BookingCalendar({
 }: BookingCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
+  // ── Touch swipe for month navigation ──
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+  const SWIPE_THRESHOLD = 50; // minimum px to trigger swipe
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  }, []);
+
+  const handleTouchEnd = useCallback(
+    (e: React.TouchEvent) => {
+      if (touchStartX.current === null || touchStartY.current === null) return;
+
+      const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+      const deltaY = e.changedTouches[0].clientY - touchStartY.current;
+
+      // Only trigger if horizontal movement is dominant
+      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > SWIPE_THRESHOLD) {
+        if (deltaX < 0) {
+          // Swipe left → next month
+          setCurrentMonth((prev) => addMonths(prev, 1));
+        } else {
+          // Swipe right → previous month
+          setCurrentMonth((prev) => subMonths(prev, 1));
+        }
+      }
+
+      touchStartX.current = null;
+      touchStartY.current = null;
+    },
+    []
+  );
+
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
@@ -70,7 +104,11 @@ export function BookingCalendar({
   }
 
   return (
-    <div className="w-full">
+    <div
+      className="w-full"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       {/* Month Navigation */}
       <div className="mb-4 flex items-center justify-between">
         <Button
