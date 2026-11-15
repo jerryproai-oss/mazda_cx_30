@@ -31,12 +31,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col bg-gradient-to-br from-stone-50 via-white to-amber-50/30">
         {/* 半透明 CX-30 背景浮水印 */}
         <div
-          className="fixed inset-0 pointer-events-none z-0 opacity-[0.03]"
+          className="fixed inset-0 pointer-events-none z-0 opacity-[0.06]"
           style={{
             backgroundImage: "url('/images/cx30.jpg')",
-            backgroundPosition: "center",
+            backgroundPosition: "center 70%",
             backgroundRepeat: "no-repeat",
-            backgroundSize: "60%",
+            backgroundSize: "50%",
+            filter: "grayscale(30%)",
           }}
         />
         <TooltipProvider>
