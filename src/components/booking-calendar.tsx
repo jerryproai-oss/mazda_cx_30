@@ -17,8 +17,8 @@ import {
 import { zhTW } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { USER_COLORS, STATUS_BADGE_COLORS } from "@/lib/constants";
+import { USER_COLORS } from "@/lib/constants";
+import { getHoliday } from "@/lib/taiwan-holidays";
 import type { BookingLog } from "@/db/schema";
 import { cn } from "@/lib/utils";
 
@@ -94,10 +94,13 @@ export function BookingCalendar({
 
       {/* Day Headers */}
       <div className="grid grid-cols-7 gap-px">
-        {DAY_HEADERS.map((header) => (
+        {DAY_HEADERS.map((header, i) => (
           <div
             key={header}
-            className="py-2 text-center text-xs font-medium text-muted-foreground"
+            className={cn(
+              "py-2 text-center text-xs font-medium",
+              i === 0 ? "text-red-400" : i === 6 ? "text-red-400" : "text-muted-foreground"
+            )}
           >
             {header}
           </div>
@@ -110,6 +113,12 @@ export function BookingCalendar({
           const isCurrentMonth = isSameMonth(day, currentMonth);
           const isToday = isSameDay(day, today);
           const dayBookings = getBookingsForDay(day);
+          const dayOfWeek = getDay(day);
+          const isSunday = dayOfWeek === 0;
+          const isSaturday = dayOfWeek === 6;
+          const dateStr = format(day, "yyyy-MM-dd");
+          const holiday = getHoliday(dateStr);
+          const isWeekend = isSunday || isSaturday;
 
           return (
             <button
@@ -119,20 +128,37 @@ export function BookingCalendar({
               className={cn(
                 "relative flex min-h-16 flex-col gap-0.5 bg-background p-1 text-left transition-colors hover:bg-muted/50 sm:min-h-24 sm:p-2",
                 !isCurrentMonth && "bg-muted/30 text-muted-foreground/50",
+                holiday && isCurrentMonth && "bg-red-50/60",
+                isWeekend && isCurrentMonth && !holiday && "bg-stone-50/80",
                 idx === 0 && "rounded-tl-lg",
                 idx === 6 && "rounded-tr-lg",
                 idx === allDays.length - 7 && "rounded-bl-lg",
                 idx === allDays.length - 1 && "rounded-br-lg"
               )}
             >
-              <span
-                className={cn(
-                  "inline-flex size-6 items-center justify-center rounded-full text-xs font-medium sm:size-7 sm:text-sm",
-                  isToday && "bg-primary text-primary-foreground ring-2 ring-primary/30"
+              <div className="flex items-center gap-1">
+                <span
+                  className={cn(
+                    "inline-flex size-6 items-center justify-center rounded-full text-xs font-medium sm:size-7 sm:text-sm",
+                    isToday && "bg-primary text-primary-foreground ring-2 ring-primary/30",
+                    !isToday && (isSunday || isSaturday) && isCurrentMonth && "text-red-500",
+                    !isToday && holiday && isCurrentMonth && "text-red-600 font-bold"
+                  )}
+                >
+                  {format(day, "d")}
+                </span>
+                {/* Holiday label */}
+                {holiday && isCurrentMonth && (
+                  <span className="hidden truncate text-[9px] font-medium text-red-500 sm:inline">
+                    {holiday.name}
+                  </span>
                 )}
-              >
-                {format(day, "d")}
-              </span>
+              </div>
+
+              {/* Holiday dot on mobile */}
+              {holiday && isCurrentMonth && (
+                <span className="text-[8px] text-red-400 sm:hidden">🔴</span>
+              )}
 
               {/* Booking dots — compact mobile view */}
               <div className="flex flex-wrap gap-0.5 sm:hidden">
@@ -192,7 +218,7 @@ export function BookingCalendar({
         })}
       </div>
 
-      {/* User Color Legend */}
+      {/* Legend */}
       <div className="mt-4 flex flex-wrap items-center gap-4">
         <span className="text-xs text-muted-foreground">圖例：</span>
         {(Object.entries(USER_COLORS) as [string, (typeof USER_COLORS)[keyof typeof USER_COLORS]][]).map(
@@ -203,6 +229,10 @@ export function BookingCalendar({
             </div>
           )
         )}
+        <div className="flex items-center gap-1.5">
+          <span className="size-2.5 rounded-full bg-red-400" />
+          <span className="text-xs text-red-500">國定假日</span>
+        </div>
       </div>
     </div>
   );
