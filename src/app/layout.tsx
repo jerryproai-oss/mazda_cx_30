@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { Geist, Geist_Mono } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { NavBar } from "@/components/nav-bar";
@@ -30,17 +29,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-gradient-to-br from-stone-50 via-white to-amber-50/30">
-        {/* 右下角半透明 CX-30 浮水印 */}
-        <div className="fixed bottom-4 right-4 pointer-events-none z-0 opacity-[0.10]">
-          <Image
-            src="/images/cx30.jpg"
-            alt=""
-            width={480}
-            height={270}
-            className="grayscale-[40%]"
-            priority={false}
-          />
-        </div>
         <TooltipProvider>
           <NavBar />
           <main className="relative z-10 flex-1 container mx-auto px-4 py-6 max-w-7xl">
