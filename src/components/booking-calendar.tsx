@@ -149,7 +149,7 @@ export function BookingCalendar({
                 </span>
                 {/* Holiday label */}
                 {holiday && isCurrentMonth && (
-                  <span className="hidden truncate text-[9px] font-medium text-red-500 sm:inline">
+                  <span className="hidden truncate text-[11px] font-medium text-red-500 sm:inline">
                     {holiday.name}
                   </span>
                 )}
@@ -157,7 +157,7 @@ export function BookingCalendar({
 
               {/* Holiday dot on mobile */}
               {holiday && isCurrentMonth && (
-                <span className="text-[8px] text-red-400 sm:hidden">🔴</span>
+                <span className="text-[10px] text-red-400 sm:hidden">🔴</span>
               )}
 
               {/* Booking dots — compact mobile view */}
@@ -192,7 +192,7 @@ export function BookingCalendar({
                         onBookingClick(booking);
                       }}
                       className={cn(
-                        "flex items-center gap-1 truncate rounded px-1 py-0.5 text-[10px] leading-tight transition-opacity hover:opacity-80",
+                        "flex items-center gap-1 truncate rounded px-1 py-0.5 text-xs leading-tight transition-opacity hover:opacity-80",
                         colors?.bg,
                         colors?.text
                       )}
@@ -208,7 +208,7 @@ export function BookingCalendar({
                   );
                 })}
                 {dayBookings.length > 2 && (
-                  <span className="px-1 text-[10px] text-muted-foreground">
+                  <span className="px-1 text-xs text-muted-foreground">
                     +{dayBookings.length - 2} 筆
                   </span>
                 )}
